@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>حاسبة </title>
+    <style>
+        /* إضافة التنسيقات العامة هنا */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('https://images.pexels.com/photos/53621/calculator-calculation-insurance-finance-53621.jpeg');
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            background-size: cover;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #c52929;
+        }
+
+        p {
+            font-size: 30px;
+        }
+
+        /* إضافة التنسيقات الخاصة بالشاشات الصغيرة هنا */
+        /* Small */
+        @media (min-width: 370px) {
+            .container {
+                width: 365px;
+            }
+
+            .card {
+            padding-top: 30px;
+            border-radius: 20px;
+
+        }
+
+            label {
+                display: block;
+                margin-bottom: 10px;
+                font-size: 40px;
+            }
+    
+            input[type="number"] {
+                width: 100%;
+                padding: 10px;
+                box-sizing: border-box;
+                margin-bottom: 20px;
+                height: 60px;
+                font-size: 30px;
+            }
+    
+            button {
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                cursor: pointer;
+                height: 60px;
+                font-size: 30px;
+            }
+    
+            button:hover {
+                background-color: #c52929;
+            }
+        }
+        @media (min-width: 768px) {
+            .container {
+                width: 750px;
+            }
+
+            .card {
+            padding-top: 30px;
+            border-radius: 20px;
+
+        }
+
+            label {
+                display: block;
+                margin-bottom: 10px;
+                font-size: 40px;
+            }
+    
+            input[type="number"] {
+                width: 100%;
+                padding: 10px;
+                box-sizing: border-box;
+                margin-bottom: 20px;
+                height: 60px;
+                font-size: 30px;
+            }
+    
+            button {
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                cursor: pointer;
+                height: 60px;
+                font-size: 30px;
+            }
+    
+            button:hover {
+                background-color: #c52929;
+            }
+        }
+
+        /* Medium */
+        @media (min-width: 1200px) {
+            .container {
+                width: 1150px;
+            }
+        }
+
+        /* Large */
+        @media (min-width: 1400px) {
+            .container {
+                width: 1350px;
+            }
+        }
+
+        /* xLarge */
+        @media (min-width: 1600px) {
+            .container {
+                width: 1550px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>حاسبة الضرائب</h1>
+        <div class="card">
+            <label for="salary">الراتب:</label>
+            <input type="number" id="salary" name="salary">
+            <button onclick="calculateTax()">احسب</button>
+            <p id="output"></p>
+        </div>
+
+    </div>
+    <script>
+        // Define constants for tax brackets and rates
+        const BRACKET_1 = 15000;
+        const BRACKET_2 = 30000;
+        const BRACKET_3 = 45000;
+        const BRACKET_4 = 60000;
+        const BRACKET_5 = 200000;
+        const BRACKET_6 = 400000;
+        const BRACKET_7 = 600000;
+        const BRACKET_8 = 700000;
+        const BRACKET_9 = 800000;
+        const BRACKET_10 = 900000;
+        const BRACKET_11 = 1000000;
+        const BRACKET_12 = 1000001;
+
+        const RATE_1 = 0;
+        const RATE_2 = 0.025;
+        const RATE_3 = 0.1;
+        const RATE_4 = 0.15;
+        const RATE_5 = 0.2;
+        const RATE_6 = 0.225;
+        const RATE_7 = 0.25;
+
+        function calculateTax() {
+            let salary = document.getElementById("salary").value - 15000;
+            let tax = 0;
+
+            // Use switch statement instead of if-else chain
+            switch (true) {
+                case (salary <= BRACKET_1):
+                    tax = salary * RATE_1;
+                    break;
+                case (salary <= BRACKET_2):
+                    tax = (salary - BRACKET_1)
+                        * RATE_2 + BRACKET_1 * RATE_1;
+                    break;
+                case (salary <= BRACKET_3):
+                    tax = (salary - BRACKET_2)
+                        * RATE_3 + (BRACKET_2 - BRACKET_1) * RATE_2 + BRACKET_1 * RATE_1;
+                    break;
+                case (salary <= BRACKET_4):
+                    tax = (salary - BRACKET_3)
+                        * RATE_4 + (BRACKET_3 - BRACKET_2) * RATE_3 + (BRACKET_2 - BRACKET_1)
+                        * RATE_2 + BRACKET_1 * RATE_1;
+                    break;
+                case (salary <= BRACKET_5):
+                    tax = (salary - BRACKET_4)
+                        * RATE_5 + (BRACKET_4 - BRACKET_3) * RATE_4 + (BRACKET_3 - BRACKET_2)
+                        * RATE_3 + (BRACKET_2 - BRACKET_1) * RATE_2 + BRACKET_1 * RATE_1;
+                    break;
+                case (salary <= BRACKET_6):
+                    tax = (salary - BRACKET_5)
+                        * RATE_6 + (BRACKET_5) * RATE_6 + (BRACKET_4 - BRACKET_3)
+                        * RATE_5 + (BRACKET_3 - BRACKET_2) * RATE_4 + (BRACKET_2 - BRACKET_1)
+                        * RATE_3 + BRACKET_1 * RATE_1;
+                    break;
+                case (salary <= BRACKET_7):
+                    tax = (salary - BRACKET_6)
+                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5 - BRACKET_4)
+                        * RATE_5 + (BRACKET_4 - BRACKET_3) * RATE_4 + (BRACKET_3 - BRACKET_2)
+                        * RATE_3 + (BRACKET_2 - BRACKET_1) * RATE_2 + BRACKET_1 * RATE_1;
+                    break;
+                case (salary <= BRACKET_8):
+                    tax = (salary - BRACKET_6)
+                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5 - BRACKET_4)
+                        * RATE_5 + (BRACKET_4 - BRACKET_3) * RATE_4 + (BRACKET_3 - BRACKET_2)
+                        * RATE_3 + (BRACKET_2) * RATE_2;
+                    break;
+                case (salary <= BRACKET_9):
+                    tax = (salary - BRACKET_6)
+                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5 - BRACKET_4)
+                        * RATE_5 + (BRACKET_4 - BRACKET_3) * RATE_4 + (BRACKET_3)
+                        * RATE_3;
+                    break;
+                case (salary <= BRACKET_10):
+                    tax = (salary - BRACKET_6)
+                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5 - BRACKET_4)
+                        * RATE_5 + (BRACKET_4) * RATE_4;
+                    break;
+                case (salary <= BRACKET_11):
+                    tax = (salary - BRACKET_6)
+                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5) * RATE_5;
+                    break;
+                case (salary > BRACKET_12):
+                    tax = (salary - BRACKET_6)
+                        * RATE_7 + (BRACKET_6) * RATE_6;
+                    break;
+            }
+            // Use formatNumber function to format the numbers with commas and decimals
+            document.getElementById("output").innerHTML = formatNumber(tax) + " : الضريبة " ;
+        }
+
+        // Define a function to format a number with commas and decimals
+        function formatNumber(num) {
+            // Get the current locale of the user
+            let locale = navigator.language || "ar-EG";
+            // Use the built-in toLocaleString method to format the number
+            return num.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    </script>
+</body>
+
+</html>
