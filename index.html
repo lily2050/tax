@@ -176,29 +176,29 @@
     </div>
     <script>
         // Define constants for tax brackets and rates
-        const BRACKET_1 = 15000;
-        const BRACKET_2 = 30000;
-        const BRACKET_3 = 45000;
-        const BRACKET_4 = 60000;
-        const BRACKET_5 = 200000;
-        const BRACKET_6 = 400000;
-        const BRACKET_7 = 600000;
-        const BRACKET_8 = 700000;
-        const BRACKET_9 = 800000;
-        const BRACKET_10 = 900000;
-        const BRACKET_11 = 1000000;
-        const BRACKET_12 = 1000001;
+        const BRACKET_1 = 40000;
+        const BRACKET_2 = 55000;
+        const BRACKET_3 = 70000;
+        const BRACKET_4 = 200000;
+        const BRACKET_5 = 400000;
+        const BRACKET_6 = 600000;
+        const BRACKET_7 = 700000;
+        const BRACKET_8 = 800000;
+        const BRACKET_9 = 900000;
+        const BRACKET_10 = 1199999;
+        const BRACKET_11 = 1200000;
+        const BRACKET_12 = 1200001;
 
         const RATE_1 = 0;
-        const RATE_2 = 0.025;
-        const RATE_3 = 0.1;
-        const RATE_4 = 0.15;
-        const RATE_5 = 0.2;
-        const RATE_6 = 0.225;
-        const RATE_7 = 0.25;
+        const RATE_2 = 0.1;
+        const RATE_3 = 0.15;
+        const RATE_4 = 0.2;
+        const RATE_5 = 0.225;
+        const RATE_6 = 0.25;
+        const RATE_7 = 0.275;
 
         function calculateTax() {
-            let salary = document.getElementById("salary").value - 15000;
+            let salary = document.getElementById("salary").value - 20000;
             let tax = 0;
 
             // Use switch statement instead of if-else chain
@@ -226,40 +226,36 @@
                     break;
                 case (salary <= BRACKET_6):
                     tax = (salary - BRACKET_5)
-                        * RATE_6 + (BRACKET_5) * RATE_6 + (BRACKET_4 - BRACKET_3)
-                        * RATE_5 + (BRACKET_3 - BRACKET_2) * RATE_4 + (BRACKET_2 - BRACKET_1)
-                        * RATE_3 + BRACKET_1 * RATE_1;
+                        * RATE_6 + (BRACKET_5 - BRACKET_4)
+                        * RATE_5 + (BRACKET_4 - BRACKET_3) * RATE_4 + (BRACKET_3 - BRACKET_2)
+                        * RATE_3 + BRACKET_1 * RATE_2;
                     break;
                 case (salary <= BRACKET_7):
-                    tax = (salary - BRACKET_6)
-                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5 - BRACKET_4)
+                    tax = (salary - BRACKET_5)
+                        * RATE_6  + (BRACKET_5 - BRACKET_4)
                         * RATE_5 + (BRACKET_4 - BRACKET_3) * RATE_4 + (BRACKET_3 - BRACKET_2)
-                        * RATE_3 + (BRACKET_2 - BRACKET_1) * RATE_2 + BRACKET_1 * RATE_1;
+                        * RATE_3 +  BRACKET_2 * RATE_2;
                     break;
                 case (salary <= BRACKET_8):
-                    tax = (salary - BRACKET_6)
-                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5 - BRACKET_4)
-                        * RATE_5 + (BRACKET_4 - BRACKET_3) * RATE_4 + (BRACKET_3 - BRACKET_2)
-                        * RATE_3 + (BRACKET_2) * RATE_2;
+                    tax = (salary - BRACKET_5)
+                        * RATE_6 + (BRACKET_5 - BRACKET_4) * RATE_5  + (BRACKET_4 - BRACKET_3) 
+                        * RATE_4 + (BRACKET_3 ) * RATE_3;
                     break;
                 case (salary <= BRACKET_9):
-                    tax = (salary - BRACKET_6)
-                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5 - BRACKET_4)
-                        * RATE_5 + (BRACKET_4 - BRACKET_3) * RATE_4 + (BRACKET_3)
-                        * RATE_3;
+                    tax = (salary - BRACKET_5)
+                        * RATE_6 + (BRACKET_5) * RATE_5;
                     break;
                 case (salary <= BRACKET_10):
-                    tax = (salary - BRACKET_6)
-                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5 - BRACKET_4)
-                        * RATE_5 + (BRACKET_4) * RATE_4;
+                    tax = (salary - BRACKET_5)
+                        * RATE_6 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_4) * RATE_4;
                     break;
                 case (salary <= BRACKET_11):
-                    tax = (salary - BRACKET_6)
-                        * RATE_7 + (BRACKET_6 - BRACKET_5) * RATE_6 + (BRACKET_5) * RATE_5;
+                    tax = (salary)
+                        * RATE_6;
                     break;
-                case (salary > BRACKET_12):
-                    tax = (salary - BRACKET_6)
-                        * RATE_7 + (BRACKET_6) * RATE_6;
+                case (salary > BRACKET_11):
+                    tax = (salary - BRACKET_11)
+                        * RATE_7 + (BRACKET_11) * RATE_6;
                     break;
             }
             // Use formatNumber function to format the numbers with commas and decimals
