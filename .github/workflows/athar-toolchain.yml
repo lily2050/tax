@@ -1,0 +1,38 @@
+name: Athar Android Toolchain Export
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/athar-toolchain.yml'
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Android SDK 35 components
+        shell: bash
+        run: |
+          set -euxo pipefail
+          yes | sdkmanager "platforms;android-35" "build-tools;35.0.1"
+          mkdir -p "$RUNNER_TEMP/athar-toolchain/android-sdk/build-tools" "$RUNNER_TEMP/athar-toolchain/android-sdk/platforms"
+          cp -a "$ANDROID_HOME/build-tools/35.0.1" "$RUNNER_TEMP/athar-toolchain/android-sdk/build-tools/"
+          cp -a "$ANDROID_HOME/platforms/android-35" "$RUNNER_TEMP/athar-toolchain/android-sdk/platforms/"
+      - name: Install Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Export Gradle
+        shell: bash
+        run: |
+          set -euxo pipefail
+          gradle --version
+          G="$(readlink -f "$(command -v gradle)")"
+          GROOT="$(dirname "$(dirname "$G")")"
+          cp -a "$GROOT" "$RUNNER_TEMP/athar-toolchain/gradle-8.11.1"
+      - name: Upload toolchain
+        uses: actions/upload-artifact@v4
+        with:
+          name: athar-android-toolchain
+          path: ${{ runner.temp }}/athar-toolchain
+          compression-level: 6
+          retention-days: 1
