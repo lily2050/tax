@@ -16,29 +16,50 @@ jobs:
           mkdir -p "$RUNNER_TEMP/athar-toolchain/android-sdk/build-tools" "$RUNNER_TEMP/athar-toolchain/android-sdk/platforms"
           BT="$ANDROID_HOME/build-tools/35.0.0"
           PL="$ANDROID_HOME/platforms/android-35"
-          test -x "$BT/aapt2"
-          test -x "$BT/d8"
-          test -x "$BT/zipalign"
-          test -x "$BT/apksigner"
-          test -f "$PL/android.jar"
+          test -x "$BT/aapt2"; test -x "$BT/d8"; test -x "$BT/zipalign"; test -x "$BT/apksigner"; test -f "$PL/android.jar"
           cp -a "$BT" "$RUNNER_TEMP/athar-toolchain/android-sdk/build-tools/"
           cp -a "$PL" "$RUNNER_TEMP/athar-toolchain/android-sdk/platforms/"
       - name: Install Gradle 8.11.1
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - name: Export Gradle
+      - name: Prime Android Gradle Plugin 8.7.3
         shell: bash
         run: |
           set -euxo pipefail
-          gradle --version
-          G="$(readlink -f "$(command -v gradle)")"
-          GROOT="$(dirname "$(dirname "$G")")"
+          mkdir -p "$RUNNER_TEMP/agp/app/src/main/java/x/y"
+          cat > "$RUNNER_TEMP/agp/settings.gradle" <<'EOF'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+          rootProject.name='prime'
+          include ':app'
+          EOF
+          cat > "$RUNNER_TEMP/agp/build.gradle" <<'EOF'
+          plugins {
+            id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+          cat > "$RUNNER_TEMP/agp/app/build.gradle" <<'EOF'
+          plugins { id 'com.android.application' }
+          android { namespace 'x.y'; compileSdk 35; defaultConfig { applicationId 'x.y'; minSdk 26; targetSdk 35; versionCode 1; versionName '1' } }
+          EOF
+          cat > "$RUNNER_TEMP/agp/app/src/main/AndroidManifest.xml" <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application /></manifest>
+          EOF
+          cd "$RUNNER_TEMP/agp"
+          gradle --no-daemon :app:assembleDebug
+      - name: Export Gradle and caches
+        shell: bash
+        run: |
+          set -euxo pipefail
+          G="$(readlink -f "$(command -v gradle)")"; GROOT="$(dirname "$(dirname "$G")")"
           cp -a "$GROOT" "$RUNNER_TEMP/athar-toolchain/gradle-8.11.1"
+          mkdir -p "$RUNNER_TEMP/athar-toolchain/gradle-user-home"
+          cp -a "$HOME/.gradle/caches" "$RUNNER_TEMP/athar-toolchain/gradle-user-home/"
       - name: Upload toolchain
         uses: actions/upload-artifact@v4
         with:
-          name: athar-android-toolchain
+          name: athar-android-toolchain-agp
           path: ${{ runner.temp }}/athar-toolchain
           compression-level: 6
           retention-days: 1
