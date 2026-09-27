@@ -9,14 +9,24 @@ jobs:
   export:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Android SDK 35 components
+      - name: Locate Android SDK
         shell: bash
         run: |
           set -euxo pipefail
-          yes | sdkmanager "platforms;android-35" "build-tools;35.0.1"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls -la "$ANDROID_HOME" || true
+          ls -la "$ANDROID_HOME/platforms" || true
+          ls -la "$ANDROID_HOME/build-tools" || true
+          find "$ANDROID_HOME/cmdline-tools" -maxdepth 3 -type f -name sdkmanager -print || true
           mkdir -p "$RUNNER_TEMP/athar-toolchain/android-sdk/build-tools" "$RUNNER_TEMP/athar-toolchain/android-sdk/platforms"
-          cp -a "$ANDROID_HOME/build-tools/35.0.1" "$RUNNER_TEMP/athar-toolchain/android-sdk/build-tools/"
-          cp -a "$ANDROID_HOME/platforms/android-35" "$RUNNER_TEMP/athar-toolchain/android-sdk/platforms/"
+          SDKM="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | head -1 || true)"
+          if [ -n "$SDKM" ]; then yes | "$SDKM" "platforms;android-35" "build-tools;35.0.0"; fi
+          BT="$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -mindepth 1 -type d | sort -V | tail -1)"
+          PL="$ANDROID_HOME/platforms/android-35"
+          test -d "$BT"
+          test -f "$PL/android.jar"
+          cp -a "$BT" "$RUNNER_TEMP/athar-toolchain/android-sdk/build-tools/"
+          cp -a "$PL" "$RUNNER_TEMP/athar-toolchain/android-sdk/platforms/"
       - name: Install Gradle 8.11.1
         uses: gradle/actions/setup-gradle@v4
         with:
