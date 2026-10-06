@@ -138,7 +138,7 @@ jobs:
           test -x "$SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
-          mkdir -p toolchain/build-tools/lib toolchain/platform
+          mkdir -p toolchain/build-tools/lib toolchain/build-tools/lib64 toolchain/platform
           BT="$ANDROID_HOME/build-tools/35.0.0"
           cp "$ANDROID_HOME/platforms/android-35/android.jar" toolchain/platform/
           cp "$BT/aapt2" toolchain/build-tools/
@@ -146,9 +146,9 @@ jobs:
           cp "$BT/apksigner" toolchain/build-tools/
           cp "$BT/d8" toolchain/build-tools/
           cp "$BT/lib/d8.jar" toolchain/build-tools/lib/
-          cp "$BT/lib/apksigner.jar" toolchain/build-tools/lib/
+          cp "$BT/lib/apksigner.jar" toolchain/build-tools/lib/\n          cp "$BT/lib64/libc++.so" toolchain/build-tools/lib64/
           chmod +x toolchain/build-tools/aapt2 toolchain/build-tools/zipalign toolchain/build-tools/apksigner toolchain/build-tools/d8
-          sha256sum toolchain/build-tools/aapt2 toolchain/build-tools/zipalign toolchain/build-tools/apksigner toolchain/build-tools/d8 toolchain/build-tools/lib/*.jar toolchain/platform/android.jar > toolchain/SHA256SUMS.txt
+          sha256sum toolchain/build-tools/aapt2 toolchain/build-tools/zipalign toolchain/build-tools/apksigner toolchain/build-tools/d8 toolchain/build-tools/lib/*.jar toolchain/build-tools/lib64/libc++.so toolchain/platform/android.jar > toolchain/SHA256SUMS.txt
 
       - uses: actions/upload-artifact@v4
         with:
