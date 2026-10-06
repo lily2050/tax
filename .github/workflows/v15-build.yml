@@ -1,0 +1,39 @@
+name: Build V15 OCR Runtime
+on:
+  push:
+    branches: [chatgpt-build-v15]
+  workflow_dispatch:
+jobs:
+  ocr-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch official Tesseract.js runtime
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p out/runtime out/core
+          npm pack tesseract.js@7.0.0
+          npm pack tesseract.js-core@7.0.0
+          tar -xzf tesseract.js-7.0.0.tgz
+          cp package/dist/tesseract.min.js out/runtime/
+          cp package/dist/worker.min.js out/runtime/
+          cp package/dist/tesseract.min.js.LICENSE.txt out/runtime/ || true
+          cp package/dist/worker.min.js.LICENSE.txt out/runtime/ || true
+          rm -rf package
+          tar -xzf tesseract.js-core-7.0.0.tgz
+          cp package/tesseract-core.wasm.js out/core/
+          cp package/tesseract-core-simd.wasm.js out/core/
+          cp package/tesseract-core-lstm.wasm.js out/core/
+          cp package/tesseract-core-simd-lstm.wasm.js out/core/
+          cp package/LICENSE out/core/LICENSE_TESSERACT_CORE
+          sha256sum out/runtime/* out/core/* > out/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v15-tesseract-runtime
+          path: out/
+          if-no-files-found: error
+          compression-level: 6
