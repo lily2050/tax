@@ -1,8 +1,9 @@
-name: Build V15 OCR Runtime
+name: Build V15 Runtime and Android Toolchain
 on:
   push:
     branches: [chatgpt-build-v15]
   workflow_dispatch:
+
 jobs:
   ocr-runtime:
     runs-on: ubuntu-latest
@@ -25,14 +26,12 @@ jobs:
           cp package/dist/worker.min.js.LICENSE.txt out/runtime/ || true
           rm -rf package
           tar -xzf tesseract.js-core-7.0.0.tgz
-          cp package/tesseract-core.wasm.js out/core/
-          cp package/tesseract-core-simd.wasm.js out/core/
-          cp package/tesseract-core-lstm.wasm.js out/core/
-          cp package/tesseract-core-simd-lstm.wasm.js out/core/
+          cp package/tesseract-core*.wasm.js out/core/
           cp package/LICENSE out/core/LICENSE_TESSERACT_CORE
           curl -fL --retry 3 https://tessdata.projectnaptha.com/4.0.0/eng.traineddata.gz -o out/lang/eng.traineddata.gz
           curl -fL --retry 3 https://tessdata.projectnaptha.com/4.0.0/ara.traineddata.gz -o out/lang/ara.traineddata.gz
           sha256sum out/runtime/* out/core/* out/lang/* > out/SHA256SUMS.txt
+
       - name: Browser OCR integration test
         shell: bash
         run: |
@@ -60,7 +59,7 @@ jobs:
               const r=await worker.recognize(c);
               const text=(r?.data?.text||'').trim();
               document.getElementById('out').textContent=text;
-              document.body.dataset.pass=/Employee/i.test(text)&&/Ahmed/i.test(text)?'1':'0';
+              document.body.dataset.pass=/Employee/i.test(text)&&/Ahmed/i.test(text)&&/01012345678/.test(text)?'1':'0';
               document.body.dataset.text=text;
             }catch(e){
               document.getElementById('out').textContent='ERR '+e.stack;
@@ -100,7 +99,9 @@ jobs:
           EOF
           node test-browser.cjs
           kill $SERVER_PID || true
+
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: v15-tesseract-runtime
           path: out/
@@ -115,23 +116,30 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - uses: android-actions/setup-android@v3
-      - name: Install Android SDK components
+      - name: Install Android SDK components using runner SDK
         shell: bash
         run: |
           set -euxo pipefail
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
-          mkdir -p toolchain/build-tools toolchain/platform
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort | tail -n 1)"
+          fi
+          test -x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
+          mkdir -p toolchain/build-tools/lib toolchain/platform
+          BT="$ANDROID_HOME/build-tools/35.0.0"
           cp "$ANDROID_HOME/platforms/android-35/android.jar" toolchain/platform/
-          cp "$ANDROID_HOME/build-tools/35.0.0/aapt2" toolchain/build-tools/
-          cp "$ANDROID_HOME/build-tools/35.0.0/zipalign" toolchain/build-tools/
-          cp "$ANDROID_HOME/build-tools/35.0.0/apksigner" toolchain/build-tools/
-          cp "$ANDROID_HOME/build-tools/35.0.0/d8" toolchain/build-tools/
-          cp "$ANDROID_HOME/build-tools/35.0.0/lib/d8.jar" toolchain/build-tools/
-          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" toolchain/build-tools/
+          cp "$BT/aapt2" toolchain/build-tools/
+          cp "$BT/zipalign" toolchain/build-tools/
+          cp "$BT/apksigner" toolchain/build-tools/
+          cp "$BT/d8" toolchain/build-tools/
+          cp "$BT/lib/d8.jar" toolchain/build-tools/lib/
+          cp "$BT/lib/apksigner.jar" toolchain/build-tools/lib/
           chmod +x toolchain/build-tools/aapt2 toolchain/build-tools/zipalign toolchain/build-tools/apksigner toolchain/build-tools/d8
-          sha256sum toolchain/build-tools/* toolchain/platform/android.jar > toolchain/SHA256SUMS.txt
+          sha256sum toolchain/build-tools/aapt2 toolchain/build-tools/zipalign toolchain/build-tools/apksigner toolchain/build-tools/d8 toolchain/build-tools/lib/*.jar toolchain/platform/android.jar > toolchain/SHA256SUMS.txt
+
       - uses: actions/upload-artifact@v4
         with:
           name: v15-android-toolchain
