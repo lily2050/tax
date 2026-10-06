@@ -146,7 +146,8 @@ jobs:
           cp "$BT/apksigner" toolchain/build-tools/
           cp "$BT/d8" toolchain/build-tools/
           cp "$BT/lib/d8.jar" toolchain/build-tools/lib/
-          cp "$BT/lib/apksigner.jar" toolchain/build-tools/lib/\n          cp "$BT/lib64/libc++.so" toolchain/build-tools/lib64/
+          cp "$BT/lib/apksigner.jar" toolchain/build-tools/lib/
+          cp "$BT/lib64/libc++.so" toolchain/build-tools/lib64/
           chmod +x toolchain/build-tools/aapt2 toolchain/build-tools/zipalign toolchain/build-tools/apksigner toolchain/build-tools/d8
           sha256sum toolchain/build-tools/aapt2 toolchain/build-tools/zipalign toolchain/build-tools/apksigner toolchain/build-tools/d8 toolchain/build-tools/lib/*.jar toolchain/build-tools/lib64/libc++.so toolchain/platform/android.jar > toolchain/SHA256SUMS.txt
 
