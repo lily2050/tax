@@ -15,7 +15,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          mkdir -p out/runtime out/core
+          mkdir -p out/runtime out/core out/lang out/test
           npm pack tesseract.js@7.0.0
           npm pack tesseract.js-core@7.0.0
           tar -xzf tesseract.js-7.0.0.tgz
@@ -30,7 +30,76 @@ jobs:
           cp package/tesseract-core-lstm.wasm.js out/core/
           cp package/tesseract-core-simd-lstm.wasm.js out/core/
           cp package/LICENSE out/core/LICENSE_TESSERACT_CORE
-          sha256sum out/runtime/* out/core/* > out/SHA256SUMS.txt
+          curl -fL --retry 3 https://tessdata.projectnaptha.com/4.0.0/eng.traineddata.gz -o out/lang/eng.traineddata.gz
+          curl -fL --retry 3 https://tessdata.projectnaptha.com/4.0.0/ara.traineddata.gz -o out/lang/ara.traineddata.gz
+          sha256sum out/runtime/* out/core/* out/lang/* > out/SHA256SUMS.txt
+      - name: Browser OCR integration test
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cat > out/index.html <<'EOF'
+          <!doctype html><meta charset="utf-8">
+          <script src="./runtime/tesseract.min.js"></script>
+          <canvas id="c" width="1100" height="180"></canvas>
+          <pre id="out">START</pre>
+          <script>
+          (async()=>{
+            const c=document.getElementById('c'),x=c.getContext('2d');
+            x.fillStyle='white';x.fillRect(0,0,c.width,c.height);
+            x.fillStyle='black';x.font='48px Arial';
+            x.fillText('Employee Ahmed Department Operations 01012345678',20,100);
+            let worker;
+            try{
+              worker=await Tesseract.createWorker('ara+eng',1,{
+                workerPath:'./runtime/worker.min.js',
+                langPath:'./lang',
+                corePath:'./core',
+                workerBlobURL:false,
+                logger:m=>console.log('OCR',m.status,m.progress||0)
+              });
+              const r=await worker.recognize(c);
+              const text=(r?.data?.text||'').trim();
+              document.getElementById('out').textContent=text;
+              document.body.dataset.pass=/Employee/i.test(text)&&/Ahmed/i.test(text)?'1':'0';
+              document.body.dataset.text=text;
+            }catch(e){
+              document.getElementById('out').textContent='ERR '+e.stack;
+              document.body.dataset.pass='0';
+              document.body.dataset.text=String(e.stack||e);
+            }finally{try{await worker?.terminate()}catch(e){}}
+          })();
+          </script>
+          EOF
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright-core@1.55.0 http-server@14.1.1
+          npx http-server out -p 8080 -a 127.0.0.1 >/tmp/v15-http.log 2>&1 &
+          SERVER_PID=$!
+          sleep 2
+          cat > test-browser.cjs <<'EOF'
+          const {chromium}=require('playwright-core');
+          const fs=require('fs');
+          (async()=>{
+            const candidates=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'];
+            const exe=candidates.find(fs.existsSync);
+            if(!exe) throw new Error('Chrome/Chromium not found');
+            const b=await chromium.launch({headless:true,executablePath:exe,args:['--no-sandbox']});
+            const p=await b.newPage();
+            const errors=[];
+            p.on('pageerror',e=>errors.push(String(e)));
+            p.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+            await p.goto('http://127.0.0.1:8080',{waitUntil:'load',timeout:30000});
+            await p.waitForFunction(()=>document.body.dataset.pass==='1'||document.body.dataset.pass==='0',{timeout:180000});
+            const pass=await p.evaluate(()=>document.body.dataset.pass);
+            const text=await p.evaluate(()=>document.body.dataset.text||'');
+            const result={pass:pass==='1'&&errors.length===0,text,errors,ua:await p.evaluate(()=>navigator.userAgent)};
+            fs.writeFileSync('out/test/BROWSER_OCR_TEST.json',JSON.stringify(result,null,2));
+            console.log(result);
+            await b.close();
+            if(!result.pass) process.exit(1);
+          })().catch(e=>{console.error(e);process.exit(1)});
+          EOF
+          node test-browser.cjs
+          kill $SERVER_PID || true
       - uses: actions/upload-artifact@v4
         with:
           name: v15-tesseract-runtime
