@@ -37,16 +37,13 @@ jobs:
         run: |
           set -euxo pipefail
           cat > out/index.html <<'EOF'
-          <!doctype html><meta charset="utf-8">
+          <!doctype html><meta charset="utf-8"><link rel="icon" href="data:,">
           <script src="./runtime/tesseract.min.js"></script>
-          <canvas id="c" width="1100" height="180"></canvas>
+          <canvas id="c" width="1200" height="220"></canvas>
           <pre id="out">START</pre>
           <script>
           (async()=>{
             const c=document.getElementById('c'),x=c.getContext('2d');
-            x.fillStyle='white';x.fillRect(0,0,c.width,c.height);
-            x.fillStyle='black';x.font='48px Arial';
-            x.fillText('Employee Ahmed Department Operations 01012345678',20,100);
             let worker;
             try{
               worker=await Tesseract.createWorker('ara+eng',1,{
@@ -56,11 +53,25 @@ jobs:
                 workerBlobURL:false,
                 logger:m=>console.log('OCR',m.status,m.progress||0)
               });
-              const r=await worker.recognize(c);
-              const text=(r?.data?.text||'').trim();
-              document.getElementById('out').textContent=text;
-              document.body.dataset.pass=/Employee/i.test(text)&&/Ahmed/i.test(text)&&/01012345678/.test(text)?'1':'0';
-              document.body.dataset.text=text;
+
+              x.fillStyle='white';x.fillRect(0,0,c.width,c.height);
+              x.fillStyle='black';x.font='56px Arial';
+              x.textAlign='left';x.direction='ltr';
+              x.fillText('Employee Ahmed Department Operations',20,100);
+              const en=(await worker.recognize(c))?.data?.text?.trim()||'';
+
+              x.fillStyle='white';x.fillRect(0,0,c.width,c.height);
+              x.fillStyle='black';x.font='64px "DejaVu Sans", Arial';
+              x.textAlign='right';x.direction='rtl';
+              x.fillText('مرحبا أحمد',1160,110);
+              const ar=(await worker.recognize(c))?.data?.text?.trim()||'';
+
+              const passEn=/Employee/i.test(en)&&/Ahmed/i.test(en);
+              const passAr=/[\u0600-\u06FF]{2,}/.test(ar);
+              const payload={passEn,passAr,en,ar};
+              document.getElementById('out').textContent=JSON.stringify(payload);
+              document.body.dataset.pass=(passEn&&passAr)?'1':'0';
+              document.body.dataset.text=JSON.stringify(payload);
             }catch(e){
               document.getElementById('out').textContent='ERR '+e.stack;
               document.body.dataset.pass='0';
@@ -85,7 +96,6 @@ jobs:
             const p=await b.newPage();
             const errors=[];
             p.on('pageerror',e=>errors.push(String(e)));
-            p.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
             await p.goto('http://127.0.0.1:8080',{waitUntil:'load',timeout:30000});
             await p.waitForFunction(()=>document.body.dataset.pass==='1'||document.body.dataset.pass==='0',{timeout:180000});
             const pass=await p.evaluate(()=>document.body.dataset.pass);
